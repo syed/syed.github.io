@@ -4,12 +4,12 @@ title: About
 permalink: /about/
 ---
 
-Some information about you!
+I am a first year PhD student at [McGill University](http://mcgill.ca). My research focus is
+on cloud computing specifically, working on challeneges involing multi-cloud deployments.
 
-### More Information
-
-A place to include any other types of information that you'd like to include about yourself.
+My supervisor is [Muthucumaru Maheswaran](http://www.cs.mcgill.ca/~maheswar/) who head the
+[Advanced Networking Resarch Lab](http://cgi.cs.mcgill.ca/~anrl/doku.php) at McGill.
 
 ### Contact me
 
-[email@domain.com](mailto:email@domain.com)
+[syed.ahmed4@mail.mcgill.ca](mailto:syed.ahmed4@mail.mcgill.ca)
