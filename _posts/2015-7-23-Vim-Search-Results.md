@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Vim Tricks Search result window in Vim
+title: Better Search in Vim
 ---
 
 I find that I searching in Vim is broken. For example, when searching for a variable in my code, I often have no context
