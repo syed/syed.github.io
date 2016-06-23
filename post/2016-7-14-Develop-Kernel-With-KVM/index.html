@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>Linux Kernel Development using KVM</title>
+
+  <meta name="author" content="Syed Mushtaq Ahmed" />
+  
+  
+
+  <meta name="generator" content="Hugo 0.16" />
+
+  <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
+
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/main.css" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="http://syed.github.io/css/pygment_highlights.css" />
+  
+  
+  <meta property="og:title" content="Linux Kernel Development using KVM" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="img/avatar-icon.png" />
+  
+</head>
+
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://syed.github.io/">A Cloudy Affair</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+          <li>
+          <a title="Blog" href="/">Blog</a>
+  	      </li>
+  	    
+      
+        
+          <li>
+          <a title="About" href="/page/about/">About</a>
+  	      </li>
+  	    
+      
+      </ul>
+    </div>
+
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+      
+          <a title="A Cloudy Affair" href="http://syed.github.io/">
+              <img class="avatar-img" src="http://syed.github.io/img/avatar-icon.png" alt="A Cloudy Affair" />
+          </a>
+      
+	  </div>
+	</div>
+
+  </div>
+</nav>
+
+
+    <div role="main" class="container main-content">
+
+      
+        
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Linux Kernel Development using KVM</h1>
+      
+      
+      
+      <span class="post-meta">Posted on July 14, 2016</span>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+          
+
+<p>I am back to doing some kernel hacking. I am building my kernel as I write this post.
+Every time I try to build a kernel, I have to setup the whole environment again which
+requires a bunch of google searches and skimming a bunch of tutorials. I am writing this
+post to consolidate all of that so that the next time I pick this up, I don&rsquo;t have to search
+everywhere.</p>
+
+<h2 id="getting-the-source">Getting the source</h2>
+
+<p>From kenrel.org or from <code>apt-get</code> both work.</p>
+
+<p>{% highlight bash %}</p>
+
+<p>$ apt-get source linux-image-$(uname  -r)</p>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="building-the-kernel">Building the kernel</h2>
+
+<p>{% highlight bash %}</p>
+
+<p>$ tar -xvf linux_3.13.0.orig.tar.gz
+ $ cd linux-3.13.0/
+ $ make bzImage
+ $ make_modules</p>
+
+<p>{% endhighlight %}</p>
+
+<p>This should give you a kernel image in <code>./arch/x86_64/boot/bzImage</code>. Now we need to create
+an initrd which we will boot into. For this I use busybox. Make sure you have the statically
+linked version of the <code>busybox</code> binary and place it in the root of the kernel source.</p>
+
+<h2 id="building-the-initrd">Building the initrd</h2>
+
+<p>Save the following script in the root of the kernel source with the filename <code>create_initrd.sh</code>.
+This will build the scafollding of our initrd</p>
+
+<p>{% highlight bash %}</p>
+
+<p>mkdir -p  initramfs/bin
+mkdir -p  initramfs/etc</p>
+
+<p>touch  initramfs/init
+touch  initramfs/etc/fstab</p>
+
+<p>cp busybox initramfs/bin
+cd initramfs/bin
+ln -s busybox sh</p>
+
+<p>{% endhighlight %}</p>
+
+<p>The resultant directory structure will be:</p>
+
+<p>{% highlight bash %}</p>
+
+<p>initramfs
+├── bin
+│   ├── busybox
+│   └── sh -&gt; busybox
+├── etc
+│   └── fstab
+├── init</p>
+
+<p>{% endhighlight %}</p>
+
+<p>Edit the <code>fstab</code> file and add the following lines</p>
+
+<p>{% highlight bash %}</p>
+
+<p>proc /proc proc rw,noexec,nosuid,nodev 0 0
+sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0</p>
+
+<p>{% endhighlight %}</p>
+
+<p>Edit the <code>init</code> file and add the following lines</p>
+
+<p>{% highlight bash %}
+#!/bin/sh</p>
+
+<h1 id="mount-things-needed-by-this-script">Mount things needed by this script</h1>
+
+<p>mount -t proc proc /proc
+mount -t sysfs sysfs /sys</p>
+
+<h1 id="create-all-the-symlinks-to-bin-busybox">Create all the symlinks to /bin/busybox</h1>
+
+<p>busybox &ndash;install -s</p>
+
+<h1 id="create-device-nodes">Create device nodes</h1>
+
+<p>mknod /dev/null c 1 3
+mknod /dev/tty c 5 0
+mdev -s</p>
+
+<p>{% endhighlight %}</p>
+
+<p>create a file <code>build_initrd.sh</code> which will be run everytime there is an update
+to initrd. This may be useful if you add your program to initrd and want to
+run the kernel with the new program. This goes in the root of your kernel source</p>
+
+<p>{% highlight bash %}</p>
+
+<p>cd initramfs
+find . | cpio -H newc -o &gt; ../initramfs.cpio
+cd ..
+cat initramfs.cpio | gzip &gt; initramfs.igz</p>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="running-the-kernel-with-kvm">Running the kernel with KVM</h2>
+
+<p>Finally we are ready with our kernel and initrd. Create the file <code>run_kernel.sh</code>
+which will run the kenrnel in your terminal.</p>
+
+<p>{% highlight bash %}</p>
+
+<p>kvm -kernel arch/x86_64/boot/bzImage <br />
+    -initrd initramfs.gz <br />
+    -chardev stdio,id=stdio,mux=on <br />
+    -device virtio-serial-pci <br />
+    -device virtconsole,chardev=stdio <br />
+    -mon chardev=stdio <br />
+    -display none <br />
+    -append &lsquo;console=hvc0&rsquo;<br />
+    -s</p>
+
+<p>{% endhighlight %}</p>
+
+<h2 id="debugging-using-remote-gdb">Debugging using remote <code>gdb</code></h2>
+
+<p>The above command uses KVM to run the kernel and displays the output in the
+current terminal. It also starts a gdb server for debugging which is listening
+on port <code>tcp:1234</code>. You can use a remote <code>gdb</code> to  debug.</p>
+
+<p>{% highlight bash %}</p>
+
+<p>$ gdb vmlinux
+ (gdb) set architecture  i386:x86-64
+ (gdb) target remote :1234</p>
+
+<p>{% endhighlight %}</p>
+
+<p>That&rsquo;s it. Once the kernel is up and running, you can attach the debugger and
+debug. If you want to add any modules, throw them in the initramfs directory,
+update the <code>init</code> script to load them when the kernel boots up, rebuild the
+initramfs and you are set.</p>
+
+<h3 id="references">References</h3>
+
+<p>[1] <a href="http://jootamam.net/howto-initramfs-image.htm">http://jootamam.net/howto-initramfs-image.htm</a> <br/>
+[2] <a href="https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/">https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/</a></p>
+
+      </article>
+
+      <ul class="pager blog-pager">
+        
+        <li class="previous">
+          <a href="http://syed.github.io/post/2015-7-23-Vim-Search-Results/" data-toggle="tooltip" data-placement="top" title="Better Search in Vim">&larr; Previous Post</a>
+        </li>
+        
+        
+      </ul>
+
+      
+
+    </div>
+  </div>
+</div>
+
+      
+
+    </div>
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+          
+          <li>
+            <a href="https://github.com/syed" title="GitHub">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+		      
+		      
+		      
+          <li>
+            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+	    	  
+          
+          
+
+    		  <li>
+      			<a href="http://syed.github.io/index.xml" title="RSS">
+      			  <span class="fa-stack fa-lg">
+        				<i class="fa fa-circle fa-stack-2x"></i>
+        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+      			  </span>
+      			</a>
+    		  </li>		
+
+        </ul>
+        <p class="copyright text-muted">
+    		  Syed Mushtaq Ahmed
+    		  &nbsp;&bull;&nbsp;
+    		  2016
+    		  
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
+    		  
+  	    </p>
+  	        
+    		<p class="theme-by text-muted">
+    		  Theme by
+    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    		</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
+<script src="http://syed.github.io/js/bootstrap.min.js"></script>
+<script src="http://syed.github.io/js/main.js"></script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>Creating an LXC container from a tarball</title>
+
+  <meta name="author" content="Syed Mushtaq Ahmed" />
+  
+  
+
+  <meta name="generator" content="Hugo 0.16" />
+
+  <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
+
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/main.css" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="http://syed.github.io/css/pygment_highlights.css" />
+  
+  
+  <meta property="og:title" content="Creating an LXC container from a tarball" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="img/avatar-icon.png" />
+  
+</head>
+
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://syed.github.io/">A Cloudy Affair</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+          <li>
+          <a title="Blog" href="/">Blog</a>
+  	      </li>
+  	    
+      
+        
+          <li>
+          <a title="About" href="/page/about/">About</a>
+  	      </li>
+  	    
+      
+      </ul>
+    </div>
+
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+      
+          <a title="A Cloudy Affair" href="http://syed.github.io/">
+              <img class="avatar-img" src="http://syed.github.io/img/avatar-icon.png" alt="A Cloudy Affair" />
+          </a>
+      
+	  </div>
+	</div>
+
+  </div>
+</nav>
+
+
+    <div role="main" class="container main-content">
+
+      
+        
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Creating an LXC container from a tarball</h1>
+      
+      
+      
+      <span class="post-meta">Posted on May 6, 2015</span>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+          <p>I recently wanted to create LXC containers on multiple hosts using a standard
+rootfs. My idea was to install all my apps on one container, <code>tar</code> it up and
+use it everywhere. As I was working on implementing this, I found that LXC does
+not provide an option to create  a container using a tarball as the rootfs.</p>
+
+<p>After a bit of googling I found
+<a href="https://raw.githubusercontent.com/saltstack/salt/develop/salt/templates/lxc/salt_tarball">this</a>
+script from <a href="http://saltstack.com/">saltstack</a> which lets you create a
+container from a tarball. Here is the whole process</p>
+
+<p>Assuming the container that you want to set as the templete is called
+<code>base-container</code>. Start the container and install all the apps that your require.
+shutdown the container after all depependeinces are installed.</p>
+
+<pre><code class="language-bash">$ lxc-stop -n base-container
+</code></pre>
+
+<p>By default, the rootfs for this container will be located
+at <code>/var/lib/lxc/base-conainer/rootfs</code>. Create the tar using the following
+command</p>
+
+<pre><code class="language-bash">$ cd /var/lib/lxc/base-container/
+$ tar -cvzf template.tar.gz rootfs/
+</code></pre>
+
+<p>To use <code>templete.tar.gz</code> as the template for creating new containers, download
+the <code>salt_tarball</code> script from
+<a href="https://raw.githubusercontent.com/saltstack/salt/develop/salt/templates/lxc/salt_tarball">here</a>.
+Run the lxc-create with this script as the template</p>
+
+<pre><code class="language-bash">$ lxc-create -n newcontainer -t salt_tarball -- --network_link lxcbr0 --imgtar template.tar.gz 
+</code></pre>
+
+<p>the <code>--network_link</code> is set to the default <code>lxcbr0</code> bridge that LXC creates. If
+you have a different networking set-up, change <code>lxcbr0</code>  to your bridge.</p>
+
+      </article>
+
+      <ul class="pager blog-pager">
+        
+        <li class="previous">
+          <a href="http://syed.github.io/post/2015-4-14-Real-Mode-x86/" data-toggle="tooltip" data-placement="top" title="Adressing in Real Mode in x86">&larr; Previous Post</a>
+        </li>
+        
+        
+        <li class="next">
+          <a href="http://syed.github.io/post/2015-6-9-Docker-io-limit/" data-toggle="tooltip" data-placement="top" title="Limiting I/O bandwidth on docker">Next Post &rarr;</a>
+        </li>
+        
+      </ul>
+
+      
+
+    </div>
+  </div>
+</div>
+
+      
+
+    </div>
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+          
+          <li>
+            <a href="https://github.com/syed" title="GitHub">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+		      
+		      
+		      
+          <li>
+            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+	    	  
+          
+          
+
+    		  <li>
+      			<a href="http://syed.github.io/index.xml" title="RSS">
+      			  <span class="fa-stack fa-lg">
+        				<i class="fa fa-circle fa-stack-2x"></i>
+        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+      			  </span>
+      			</a>
+    		  </li>		
+
+        </ul>
+        <p class="copyright text-muted">
+    		  Syed Mushtaq Ahmed
+    		  &nbsp;&bull;&nbsp;
+    		  2016
+    		  
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
+    		  
+  	    </p>
+  	        
+    		<p class="theme-by text-muted">
+    		  Theme by
+    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    		</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
+<script src="http://syed.github.io/js/bootstrap.min.js"></script>
+<script src="http://syed.github.io/js/main.js"></script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+
+  </body>
+</html>

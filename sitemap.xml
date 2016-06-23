@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://syed.github.io/</loc>
+    <lastmod>2016-07-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/post/2016-7-14-Develop-Kernel-With-KVM/</loc>
+    <lastmod>2016-07-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/page/about/</loc>
+    <lastmod>2016-06-23T11:37:21-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/post/2015-7-23-Vim-Search-Results/</loc>
+    <lastmod>2015-07-23T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/post/2015-6-9-Docker-io-limit/</loc>
+    <lastmod>2015-06-09T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/post/2015-5-6-LXC-tarball-create/</loc>
+    <lastmod>2015-05-06T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://syed.github.io/post/2015-4-14-Real-Mode-x86/</loc>
+    <lastmod>2015-04-14T00:00:00+00:00</lastmod>
+  </url>
+  
+</urlset>
