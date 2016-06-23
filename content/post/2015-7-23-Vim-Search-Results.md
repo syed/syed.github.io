@@ -1,7 +1,7 @@
----
-layout: post
-title: Better Search in Vim
----
++++
+title = "Better Search in Vim"
+date = "2015-07-23"
++++
 
 I find that I searching in Vim is broken. For example, when searching for a variable in my code, I often have no context
 where the next variable is. Sure, I can use `n` to go to the next match but I dont't get an overall picture of how and 

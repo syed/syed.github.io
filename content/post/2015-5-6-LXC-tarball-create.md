@@ -1,7 +1,7 @@
----
-layout: post
-title: Creating an LXC container from a tarball
----
++++
+title = "Creating an LXC container from a tarball"
+date = "2015-05-06"
++++
 
 I recently wanted to create LXC containers on multiple hosts using a standard
 rootfs. My idea was to install all my apps on one container, `tar` it up and

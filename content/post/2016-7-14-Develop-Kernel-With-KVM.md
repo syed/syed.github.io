@@ -1,7 +1,7 @@
----
-layout: post
-title: Developing Linux Kernel using KVM
----
++++
+title = "Linux Kernel Development using KVM"
+date = "2016-07-14"
++++
 
 I am back to doing some kernel hacking. I am building my kernel as I write this post. 
 Every time I try to build a kernel, I have to setup the whole environment again which 

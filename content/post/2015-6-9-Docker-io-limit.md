@@ -1,7 +1,7 @@
----
-layout: post
-title: Limiting I/O bandwidth on docker
----
++++
+title = "Limiting I/O bandwidth on docker"
+date = "2015-06-09"
++++
 
 When you create a docker container, by default, I/O on it is unlimited.  For my
 project I needed to create docker containers with limited I/O bandwidth but
