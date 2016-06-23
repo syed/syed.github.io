@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>Limiting I/O bandwidth on docker</title>
+
+  <meta name="author" content="Syed Mushtaq Ahmed" />
+  
+  
+
+  <meta name="generator" content="Hugo 0.16" />
+
+  <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
+
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/main.css" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="http://syed.github.io/css/pygment_highlights.css" />
+  
+  
+  <meta property="og:title" content="Limiting I/O bandwidth on docker" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="img/avatar-icon.png" />
+  
+</head>
+
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://syed.github.io/">A Cloudy Affair</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+          <li>
+          <a title="Blog" href="/">Blog</a>
+  	      </li>
+  	    
+      
+        
+          <li>
+          <a title="About" href="/page/about/">About</a>
+  	      </li>
+  	    
+      
+      </ul>
+    </div>
+
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+      
+          <a title="A Cloudy Affair" href="http://syed.github.io/">
+              <img class="avatar-img" src="http://syed.github.io/img/avatar-icon.png" alt="A Cloudy Affair" />
+          </a>
+      
+	  </div>
+	</div>
+
+  </div>
+</nav>
+
+
+    <div role="main" class="container main-content">
+
+      
+        
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Limiting I/O bandwidth on docker</h1>
+      
+      
+      
+      <span class="post-meta">Posted on June 9, 2015</span>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+          <p>When you create a docker container, by default, I/O on it is unlimited.  For my
+project I needed to create docker containers with limited I/O bandwidth but
+docker does not provide I/O limits out of the box like cpu (<code>--cpuset</code> and <code>--cpu-shares</code>) or memory (<code>--memory</code>) limits. However, the
+kernel provides <code>blkio</code> cgroup subsytem which can be used to limit I/O on a block
+device.</p>
+
+<p>I created this script which limits I/O bandwidth on containers.</p>
+
+<script src="https://gist.github.com/syed/d44a781e248769f0580a.js"></script>
+
+<p>To use the script, create a container and record the container ID. Pass the ID
+to the script along with the read and write bandwidth (measured in bytes per sec).</p>
+
+<pre><code class="language-bash">$ CONTAINER_ID=$(docker run -d ubuntu sleep 4000)
+$ python docker_io_limit.py $CONTAINER_ID --read 1048576 --write 1048576
+
+</code></pre>
+
+<p>The above command will give the docker container a read/write bandwidth of 1MB/s.
+You can verify this by using dd</p>
+
+<pre><code class="language-bash">$ docker  exec -it $CONTAINER_ID /bin/bash
+root@179768a19696:/# dd if=/dev/zero of=testfile count=10240 oflag=direct
+10240+0 records in
+10240+0 records out
+5242880 bytes (5.2 MB) copied, 6.87569 s, 763 kB/s
+root@179768a19696:/# dd of=/dev/null if=testfile count=10240 iflag=direct
+10240+0 records in
+10240+0 records out
+5242880 bytes (5.2 MB) copied, 5.2248 s, 1.0 MB/s
+root@179768a19696:/# 
+</code></pre>
+
+<p>As you can see we get about <code>763 kB/s</code> write and <code>1.0 MB/s</code> read speed.</p>
+
+      </article>
+
+      <ul class="pager blog-pager">
+        
+        <li class="previous">
+          <a href="http://syed.github.io/post/2015-5-6-LXC-tarball-create/" data-toggle="tooltip" data-placement="top" title="Creating an LXC container from a tarball">&larr; Previous Post</a>
+        </li>
+        
+        
+        <li class="next">
+          <a href="http://syed.github.io/post/2015-7-23-Vim-Search-Results/" data-toggle="tooltip" data-placement="top" title="Better Search in Vim">Next Post &rarr;</a>
+        </li>
+        
+      </ul>
+
+      
+
+    </div>
+  </div>
+</div>
+
+      
+
+    </div>
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+          
+          <li>
+            <a href="https://github.com/syed" title="GitHub">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+		      
+		      
+		      
+          <li>
+            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+	    	  
+          
+          
+
+    		  <li>
+      			<a href="http://syed.github.io/index.xml" title="RSS">
+      			  <span class="fa-stack fa-lg">
+        				<i class="fa fa-circle fa-stack-2x"></i>
+        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+      			  </span>
+      			</a>
+    		  </li>		
+
+        </ul>
+        <p class="copyright text-muted">
+    		  Syed Mushtaq Ahmed
+    		  &nbsp;&bull;&nbsp;
+    		  2016
+    		  
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
+    		  
+  	    </p>
+  	        
+    		<p class="theme-by text-muted">
+    		  Theme by
+    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    		</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
+<script src="http://syed.github.io/js/bootstrap.min.js"></script>
+<script src="http://syed.github.io/js/main.js"></script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+
+  </body>
+</html>

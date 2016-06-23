@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>A Cloudy Affair</title>
+    <link>http://syed.github.io/</link>
+    <description>Recent content on A Cloudy Affair</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Thu, 14 Jul 2016 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://syed.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Linux Kernel Development using KVM</title>
+      <link>http://syed.github.io/post/2016-7-14-Develop-Kernel-With-KVM/</link>
+      <pubDate>Thu, 14 Jul 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://syed.github.io/post/2016-7-14-Develop-Kernel-With-KVM/</guid>
+      <description>
+
+&lt;p&gt;I am back to doing some kernel hacking. I am building my kernel as I write this post.
+Every time I try to build a kernel, I have to setup the whole environment again which
+requires a bunch of google searches and skimming a bunch of tutorials. I am writing this
+post to consolidate all of that so that the next time I pick this up, I don&amp;rsquo;t have to search
+everywhere.&lt;/p&gt;
+
+&lt;h2 id=&#34;getting-the-source&#34;&gt;Getting the source&lt;/h2&gt;
+
+&lt;p&gt;From kenrel.org or from &lt;code&gt;apt-get&lt;/code&gt; both work.&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;$ apt-get source linux-image-$(uname  -r)&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;h2 id=&#34;building-the-kernel&#34;&gt;Building the kernel&lt;/h2&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;$ tar -xvf linux_3.13.0.orig.tar.gz
+ $ cd linux-3.13.0/
+ $ make bzImage
+ $ make_modules&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;This should give you a kernel image in &lt;code&gt;./arch/x86_64/boot/bzImage&lt;/code&gt;. Now we need to create
+an initrd which we will boot into. For this I use busybox. Make sure you have the statically
+linked version of the &lt;code&gt;busybox&lt;/code&gt; binary and place it in the root of the kernel source.&lt;/p&gt;
+
+&lt;h2 id=&#34;building-the-initrd&#34;&gt;Building the initrd&lt;/h2&gt;
+
+&lt;p&gt;Save the following script in the root of the kernel source with the filename &lt;code&gt;create_initrd.sh&lt;/code&gt;.
+This will build the scafollding of our initrd&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;mkdir -p  initramfs/bin
+mkdir -p  initramfs/etc&lt;/p&gt;
+
+&lt;p&gt;touch  initramfs/init
+touch  initramfs/etc/fstab&lt;/p&gt;
+
+&lt;p&gt;cp busybox initramfs/bin
+cd initramfs/bin
+ln -s busybox sh&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;The resultant directory structure will be:&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;initramfs
+├── bin
+│   ├── busybox
+│   └── sh -&amp;gt; busybox
+├── etc
+│   └── fstab
+├── init&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;Edit the &lt;code&gt;fstab&lt;/code&gt; file and add the following lines&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;proc /proc proc rw,noexec,nosuid,nodev 0 0
+sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;Edit the &lt;code&gt;init&lt;/code&gt; file and add the following lines&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}
+#!/bin/sh&lt;/p&gt;
+
+&lt;h1 id=&#34;mount-things-needed-by-this-script&#34;&gt;Mount things needed by this script&lt;/h1&gt;
+
+&lt;p&gt;mount -t proc proc /proc
+mount -t sysfs sysfs /sys&lt;/p&gt;
+
+&lt;h1 id=&#34;create-all-the-symlinks-to-bin-busybox&#34;&gt;Create all the symlinks to /bin/busybox&lt;/h1&gt;
+
+&lt;p&gt;busybox &amp;ndash;install -s&lt;/p&gt;
+
+&lt;h1 id=&#34;create-device-nodes&#34;&gt;Create device nodes&lt;/h1&gt;
+
+&lt;p&gt;mknod /dev/null c 1 3
+mknod /dev/tty c 5 0
+mdev -s&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;create a file &lt;code&gt;build_initrd.sh&lt;/code&gt; which will be run everytime there is an update
+to initrd. This may be useful if you add your program to initrd and want to
+run the kernel with the new program. This goes in the root of your kernel source&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;cd initramfs
+find . | cpio -H newc -o &amp;gt; ../initramfs.cpio
+cd ..
+cat initramfs.cpio | gzip &amp;gt; initramfs.igz&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;h2 id=&#34;running-the-kernel-with-kvm&#34;&gt;Running the kernel with KVM&lt;/h2&gt;
+
+&lt;p&gt;Finally we are ready with our kernel and initrd. Create the file &lt;code&gt;run_kernel.sh&lt;/code&gt;
+which will run the kenrnel in your terminal.&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;kvm -kernel arch/x86_64/boot/bzImage &lt;br /&gt;
+    -initrd initramfs.gz &lt;br /&gt;
+    -chardev stdio,id=stdio,mux=on &lt;br /&gt;
+    -device virtio-serial-pci &lt;br /&gt;
+    -device virtconsole,chardev=stdio &lt;br /&gt;
+    -mon chardev=stdio &lt;br /&gt;
+    -display none &lt;br /&gt;
+    -append &amp;lsquo;console=hvc0&amp;rsquo;&lt;br /&gt;
+    -s&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;h2 id=&#34;debugging-using-remote-gdb&#34;&gt;Debugging using remote &lt;code&gt;gdb&lt;/code&gt;&lt;/h2&gt;
+
+&lt;p&gt;The above command uses KVM to run the kernel and displays the output in the
+current terminal. It also starts a gdb server for debugging which is listening
+on port &lt;code&gt;tcp:1234&lt;/code&gt;. You can use a remote &lt;code&gt;gdb&lt;/code&gt; to  debug.&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;$ gdb vmlinux
+ (gdb) set architecture  i386:x86-64
+ (gdb) target remote :1234&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;That&amp;rsquo;s it. Once the kernel is up and running, you can attach the debugger and
+debug. If you want to add any modules, throw them in the initramfs directory,
+update the &lt;code&gt;init&lt;/code&gt; script to load them when the kernel boots up, rebuild the
+initramfs and you are set.&lt;/p&gt;
+
+&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+
+&lt;p&gt;[1] &lt;a href=&#34;http://jootamam.net/howto-initramfs-image.htm&#34;&gt;http://jootamam.net/howto-initramfs-image.htm&lt;/a&gt; &lt;br/&gt;
+[2] &lt;a href=&#34;https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/&#34;&gt;https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>about</title>
+      <link>http://syed.github.io/page/about/</link>
+      <pubDate>Thu, 23 Jun 2016 11:37:21 -0400</pubDate>
+      
+      <guid>http://syed.github.io/page/about/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Better Search in Vim</title>
+      <link>http://syed.github.io/post/2015-7-23-Vim-Search-Results/</link>
+      <pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://syed.github.io/post/2015-7-23-Vim-Search-Results/</guid>
+      <description>&lt;p&gt;I find that I searching in Vim is broken. For example, when searching for a variable in my code, I often have no context
+where the next variable is. Sure, I can use &lt;code&gt;n&lt;/code&gt; to go to the next match but I dont&amp;rsquo;t get an overall picture of how and
+where that variable is being used in my file. Also, I cannot easily jump from one position to another without cycling
+through all of them. To fix this, I was playing around with the quickfix window to see if I can use that to better
+browse my matches.&lt;/p&gt;
+
+&lt;p&gt;Here is what I have come up with.I think this works well for me as I can now easily switch between different
+mataches and I also have a context of how my match is being used.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/b879oj9m2khcep8/vim-qfix-search.png?raw=1&#34; alt=&#34;Vim qfix search&#34; title=&#34;Vim qfix search&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To enable this, add the following line to your &lt;code&gt;.vimrc&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+
+&lt;p&gt;map &lt;F5&gt; /&lt;C-r&gt;&lt;C-w&gt; &lt;CR&gt; :vim /&lt;C-r&gt;&lt;C-w&gt;/g % | copen &lt;CR&gt;&lt;/p&gt;
+
+&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+
+&lt;p&gt;Go over a word and press &lt;code&gt;F5&lt;/code&gt; to open the quickfix window with the matches.
+You can switch between the quickfix buffer and the main buffer by using
+&lt;Ctrl-w&gt;&lt;w&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Limiting I/O bandwidth on docker</title>
+      <link>http://syed.github.io/post/2015-6-9-Docker-io-limit/</link>
+      <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://syed.github.io/post/2015-6-9-Docker-io-limit/</guid>
+      <description>&lt;p&gt;When you create a docker container, by default, I/O on it is unlimited.  For my
+project I needed to create docker containers with limited I/O bandwidth but
+docker does not provide I/O limits out of the box like cpu (&lt;code&gt;--cpuset&lt;/code&gt; and &lt;code&gt;--cpu-shares&lt;/code&gt;) or memory (&lt;code&gt;--memory&lt;/code&gt;) limits. However, the
+kernel provides &lt;code&gt;blkio&lt;/code&gt; cgroup subsytem which can be used to limit I/O on a block
+device.&lt;/p&gt;
+
+&lt;p&gt;I created this script which limits I/O bandwidth on containers.&lt;/p&gt;
+
+&lt;script src=&#34;https://gist.github.com/syed/d44a781e248769f0580a.js&#34;&gt;&lt;/script&gt;
+
+&lt;p&gt;To use the script, create a container and record the container ID. Pass the ID
+to the script along with the read and write bandwidth (measured in bytes per sec).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ CONTAINER_ID=$(docker run -d ubuntu sleep 4000)
+$ python docker_io_limit.py $CONTAINER_ID --read 1048576 --write 1048576
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above command will give the docker container a read/write bandwidth of 1MB/s.
+You can verify this by using dd&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ docker  exec -it $CONTAINER_ID /bin/bash
+root@179768a19696:/# dd if=/dev/zero of=testfile count=10240 oflag=direct
+10240+0 records in
+10240+0 records out
+5242880 bytes (5.2 MB) copied, 6.87569 s, 763 kB/s
+root@179768a19696:/# dd of=/dev/null if=testfile count=10240 iflag=direct
+10240+0 records in
+10240+0 records out
+5242880 bytes (5.2 MB) copied, 5.2248 s, 1.0 MB/s
+root@179768a19696:/# 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see we get about &lt;code&gt;763 kB/s&lt;/code&gt; write and &lt;code&gt;1.0 MB/s&lt;/code&gt; read speed.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Creating an LXC container from a tarball</title>
+      <link>http://syed.github.io/post/2015-5-6-LXC-tarball-create/</link>
+      <pubDate>Wed, 06 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://syed.github.io/post/2015-5-6-LXC-tarball-create/</guid>
+      <description>&lt;p&gt;I recently wanted to create LXC containers on multiple hosts using a standard
+rootfs. My idea was to install all my apps on one container, &lt;code&gt;tar&lt;/code&gt; it up and
+use it everywhere. As I was working on implementing this, I found that LXC does
+not provide an option to create  a container using a tarball as the rootfs.&lt;/p&gt;
+
+&lt;p&gt;After a bit of googling I found
+&lt;a href=&#34;https://raw.githubusercontent.com/saltstack/salt/develop/salt/templates/lxc/salt_tarball&#34;&gt;this&lt;/a&gt;
+script from &lt;a href=&#34;http://saltstack.com/&#34;&gt;saltstack&lt;/a&gt; which lets you create a
+container from a tarball. Here is the whole process&lt;/p&gt;
+
+&lt;p&gt;Assuming the container that you want to set as the templete is called
+&lt;code&gt;base-container&lt;/code&gt;. Start the container and install all the apps that your require.
+shutdown the container after all depependeinces are installed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ lxc-stop -n base-container
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By default, the rootfs for this container will be located
+at &lt;code&gt;/var/lib/lxc/base-conainer/rootfs&lt;/code&gt;. Create the tar using the following
+command&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ cd /var/lib/lxc/base-container/
+$ tar -cvzf template.tar.gz rootfs/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To use &lt;code&gt;templete.tar.gz&lt;/code&gt; as the template for creating new containers, download
+the &lt;code&gt;salt_tarball&lt;/code&gt; script from
+&lt;a href=&#34;https://raw.githubusercontent.com/saltstack/salt/develop/salt/templates/lxc/salt_tarball&#34;&gt;here&lt;/a&gt;.
+Run the lxc-create with this script as the template&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ lxc-create -n newcontainer -t salt_tarball -- --network_link lxcbr0 --imgtar template.tar.gz 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;the &lt;code&gt;--network_link&lt;/code&gt; is set to the default &lt;code&gt;lxcbr0&lt;/code&gt; bridge that LXC creates. If
+you have a different networking set-up, change &lt;code&gt;lxcbr0&lt;/code&gt;  to your bridge.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Adressing in Real Mode in x86</title>
+      <link>http://syed.github.io/post/2015-4-14-Real-Mode-x86/</link>
+      <pubDate>Tue, 14 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://syed.github.io/post/2015-4-14-Real-Mode-x86/</guid>
+      <description>
+
+&lt;p&gt;I am planning to write a bunch of posts about memory and x86 architecture and
+virtualization. This is the first post among hopefully many which will deep
+dive into the x86 architecture.&lt;/p&gt;
+
+&lt;p&gt;In this post I will cover about the real mode which is the default mode that
+x86 runs in when it boots up. This was the default mode before intel introduced
+paging in the &lt;a href=&#34;http://en.wikipedia.org/wiki/80286&#34;&gt;80286&lt;/a&gt;. In real mode, all
+registers are 16 bits and the processor can adress upto 20-bits of address
+space giving \( 2^{20} -1 \approx 1M \) addressable bytes. Although it should be
+possible to address all 4G of memory (16 bit segment and 16 bit offset), the
+hardare at the time had only 20 address pins hence they were restricted to a
+20-bit address in real mode.  All the addresses are directly mapped to physical
+memory with no protection. Accessing memory beyond the 1M limit causes a
+wraparound which some ill-thinking developers used as a feature.&lt;/p&gt;
+
+&lt;p&gt;These 20-bit address are accessed using a combination of segment address and
+offset (logical address).  To get a physical address, the 16-bit segement
+address is sifted left 4 bits and a 16-bit offset is added to it making a total
+of 20-bit address.&lt;/p&gt;
+
+&lt;p&gt;Let us look at a sample instruction and see how it works in real mode.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+mov ax, [080h]
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The above instruction copies the value present at the logical address &lt;code&gt;0x80&lt;/code&gt; to
+the &lt;code&gt;ax&lt;/code&gt; register.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1&#34; alt=&#34;Segment addressing&#34; title=&#34;Segment addressing in real mode&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The figure above shoes how the final physical address is calculated. If no
+register is given, the &lt;code&gt;DS&lt;/code&gt; register is chosen as the segment register which
+decides which &lt;code&gt;64k&lt;/code&gt; segment we are working with. The value in the &lt;code&gt;DS&lt;/code&gt; is
+multiplied by 16 and added to the immidiate value &lt;code&gt;0x80&lt;/code&gt; which is the offset in
+the segment, to get the final physicial address. If &lt;code&gt;DS&lt;/code&gt; contained &lt;code&gt;0x100&lt;/code&gt; then
+the physical address will be&lt;/p&gt;
+
+&lt;p&gt;$$ 0\mathtt{X}100*4 + 0\mathtt{X}80 = 0\mathtt{X}480 $$&lt;/p&gt;
+
+&lt;h2 id=&#34;high-memory-area&#34;&gt;High Memory Area&lt;/h2&gt;
+
+&lt;p&gt;Now there is a corner case if you set the segement selector to 0xFFFF you can
+start accessing memory from 16 bytes below the &lt;code&gt;1M&lt;/code&gt; limit and go beyond &lt;code&gt;1M&lt;/code&gt;
+upto (64 - 16) 48 bytes.  In the &lt;code&gt;segment:offset&lt;/code&gt;  &lt;code&gt;FFFF:0000&lt;/code&gt; to &lt;code&gt;FFFF:FFFF&lt;/code&gt;
+This is the high memory area. In older processors, this would wrap around as
+they only had 20 address lines and this is a 21 bit address but you could
+access the high memory in newer models. To maintain backward compatibility with
+the older real mode, the wraparound was emulated and was controlled by setting
+the &lt;a href=&#34;http://en.wikipedia.org/wiki/A20_line&#34;&gt;A20&lt;/a&gt; line.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

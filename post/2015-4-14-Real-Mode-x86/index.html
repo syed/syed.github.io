@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <title>Adressing in Real Mode in x86</title>
+
+  <meta name="author" content="Syed Mushtaq Ahmed" />
+  
+  
+
+  <meta name="generator" content="Hugo 0.16" />
+
+  <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
+
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="http://syed.github.io/css/main.css" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+  <link rel="stylesheet" href="http://syed.github.io/css/pygment_highlights.css" />
+  
+  
+  <meta property="og:title" content="Adressing in Real Mode in x86" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="/" />
+  <meta property="og:image" content="img/avatar-icon.png" />
+  
+</head>
+
+
+  <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="http://syed.github.io/">A Cloudy Affair</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+          <li>
+          <a title="Blog" href="/">Blog</a>
+  	      </li>
+  	    
+      
+        
+          <li>
+          <a title="About" href="/page/about/">About</a>
+  	      </li>
+  	    
+      
+      </ul>
+    </div>
+
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+      
+          <a title="A Cloudy Affair" href="http://syed.github.io/">
+              <img class="avatar-img" src="http://syed.github.io/img/avatar-icon.png" alt="A Cloudy Affair" />
+          </a>
+      
+	  </div>
+	</div>
+
+  </div>
+</nav>
+
+
+    <div role="main" class="container main-content">
+
+      
+        
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Adressing in Real Mode in x86</h1>
+      
+      
+      
+      <span class="post-meta">Posted on April 14, 2015</span>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      <article role="main" class="blog-post">
+          
+
+<p>I am planning to write a bunch of posts about memory and x86 architecture and
+virtualization. This is the first post among hopefully many which will deep
+dive into the x86 architecture.</p>
+
+<p>In this post I will cover about the real mode which is the default mode that
+x86 runs in when it boots up. This was the default mode before intel introduced
+paging in the <a href="http://en.wikipedia.org/wiki/80286">80286</a>. In real mode, all
+registers are 16 bits and the processor can adress upto 20-bits of address
+space giving \( 2^{20} -1 \approx 1M \) addressable bytes. Although it should be
+possible to address all 4G of memory (16 bit segment and 16 bit offset), the
+hardare at the time had only 20 address pins hence they were restricted to a
+20-bit address in real mode.  All the addresses are directly mapped to physical
+memory with no protection. Accessing memory beyond the 1M limit causes a
+wraparound which some ill-thinking developers used as a feature.</p>
+
+<p>These 20-bit address are accessed using a combination of segment address and
+offset (logical address).  To get a physical address, the 16-bit segement
+address is sifted left 4 bits and a 16-bit offset is added to it making a total
+of 20-bit address.</p>
+
+<p>Let us look at a sample instruction and see how it works in real mode.</p>
+
+<pre><code class="language-bash">
+mov ax, [080h]
+
+</code></pre>
+
+<p>The above instruction copies the value present at the logical address <code>0x80</code> to
+the <code>ax</code> register.</p>
+
+<p><img src="https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1" alt="Segment addressing" title="Segment addressing in real mode" /></p>
+
+<p>The figure above shoes how the final physical address is calculated. If no
+register is given, the <code>DS</code> register is chosen as the segment register which
+decides which <code>64k</code> segment we are working with. The value in the <code>DS</code> is
+multiplied by 16 and added to the immidiate value <code>0x80</code> which is the offset in
+the segment, to get the final physicial address. If <code>DS</code> contained <code>0x100</code> then
+the physical address will be</p>
+
+<p>$$ 0\mathtt{X}100*4 + 0\mathtt{X}80 = 0\mathtt{X}480 $$</p>
+
+<h2 id="high-memory-area">High Memory Area</h2>
+
+<p>Now there is a corner case if you set the segement selector to 0xFFFF you can
+start accessing memory from 16 bytes below the <code>1M</code> limit and go beyond <code>1M</code>
+upto (64 - 16) 48 bytes.  In the <code>segment:offset</code>  <code>FFFF:0000</code> to <code>FFFF:FFFF</code>
+This is the high memory area. In older processors, this would wrap around as
+they only had 20 address lines and this is a 21 bit address but you could
+access the high memory in newer models. To maintain backward compatibility with
+the older real mode, the wraparound was emulated and was controlled by setting
+the <a href="http://en.wikipedia.org/wiki/A20_line">A20</a> line.</p>
+
+      </article>
+
+      <ul class="pager blog-pager">
+        
+        
+        <li class="next">
+          <a href="http://syed.github.io/post/2015-5-6-LXC-tarball-create/" data-toggle="tooltip" data-placement="top" title="Creating an LXC container from a tarball">Next Post &rarr;</a>
+        </li>
+        
+      </ul>
+
+      
+
+    </div>
+  </div>
+</div>
+
+      
+
+    </div>
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links">
+          
+          
+          <li>
+            <a href="https://github.com/syed" title="GitHub">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+		      
+		      
+		      
+          <li>
+            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
+              <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+              </span>
+            </a>
+          </li>
+          
+	    	  
+          
+          
+
+    		  <li>
+      			<a href="http://syed.github.io/index.xml" title="RSS">
+      			  <span class="fa-stack fa-lg">
+        				<i class="fa fa-circle fa-stack-2x"></i>
+        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
+      			  </span>
+      			</a>
+    		  </li>		
+
+        </ul>
+        <p class="copyright text-muted">
+    		  Syed Mushtaq Ahmed
+    		  &nbsp;&bull;&nbsp;
+    		  2016
+    		  
+    		  
+    		  &nbsp;&bull;&nbsp;
+    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
+    		  
+  	    </p>
+  	        
+    		<p class="theme-by text-muted">
+    		  Theme by
+    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    		</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
+<script src="http://syed.github.io/js/bootstrap.min.js"></script>
+<script src="http://syed.github.io/js/main.js"></script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+
+  </body>
+</html>
