@@ -82,6 +82,12 @@
 
       
         
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
 
 
 
@@ -110,6 +116,7 @@
 
 
 
+
 <div class="container">
   <div class="row">
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -128,11 +135,10 @@ mataches and I also have a context of how my match is being used.</p>
 
 <p>To enable this, add the following line to your <code>.vimrc</code></p>
 
-<p>{% highlight bash %}</p>
+<pre><code class="language-bash">
+map &lt;F5&gt; /&lt;C-r&gt;&lt;C-w&gt; &lt;CR&gt; :vim /&lt;C-r&gt;&lt;C-w&gt;/g % \| copen &lt;CR&gt;
 
-<p>map <F5> /<C-r><C-w> <CR> :vim /<C-r><C-w>/g % | copen <CR></p>
-
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>Go over a word and press <code>F5</code> to open the quickfix window with the matches.
 You can switch between the quickfix buffer and the main buffer by using

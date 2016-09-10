@@ -26,22 +26,20 @@ everywhere.&lt;/p&gt;
 
 &lt;p&gt;From kenrel.org or from &lt;code&gt;apt-get&lt;/code&gt; both work.&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+$ apt-get source linux-image-$(uname  -r)
 
-&lt;p&gt;$ apt-get source linux-image-$(uname  -r)&lt;/p&gt;
-
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;building-the-kernel:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Building the kernel&lt;/h2&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
-
-&lt;p&gt;$ tar -xvf linux_3.13.0.orig.tar.gz
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+ $ tar -xvf linux_3.13.0.orig.tar.gz 
  $ cd linux-3.13.0/
  $ make bzImage
- $ make_modules&lt;/p&gt;
+ $ make_modules
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;This should give you a kernel image in &lt;code&gt;./arch/x86_64/boot/bzImage&lt;/code&gt;. Now we need to create
 an initrd which we will boot into. For this I use busybox. Make sure you have the statically
@@ -52,96 +50,88 @@ linked version of the &lt;code&gt;busybox&lt;/code&gt; binary and place it in th
 &lt;p&gt;Save the following script in the root of the kernel source with the filename &lt;code&gt;create_initrd.sh&lt;/code&gt;.
 This will build the scafollding of our initrd&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+mkdir -p  initramfs/bin
+mkdir -p  initramfs/etc
 
-&lt;p&gt;mkdir -p  initramfs/bin
-mkdir -p  initramfs/etc&lt;/p&gt;
+touch  initramfs/init
+touch  initramfs/etc/fstab
 
-&lt;p&gt;touch  initramfs/init
-touch  initramfs/etc/fstab&lt;/p&gt;
-
-&lt;p&gt;cp busybox initramfs/bin
+cp busybox initramfs/bin
 cd initramfs/bin
-ln -s busybox sh&lt;/p&gt;
+ln -s busybox sh
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;The resultant directory structure will be:&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
-
-&lt;p&gt;initramfs
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+initramfs
 ├── bin
 │   ├── busybox
 │   └── sh -&amp;gt; busybox
 ├── etc
 │   └── fstab
-├── init&lt;/p&gt;
+├── init
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Edit the &lt;code&gt;fstab&lt;/code&gt; file and add the following lines&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+proc /proc proc rw,noexec,nosuid,nodev 0 0
+sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0
 
-&lt;p&gt;proc /proc proc rw,noexec,nosuid,nodev 0 0
-sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0&lt;/p&gt;
-
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Edit the &lt;code&gt;init&lt;/code&gt; file and add the following lines&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}
-#!/bin/sh&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+#!/bin/sh
 
-&lt;h1 id=&#34;mount-things-needed-by-this-script:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Mount things needed by this script&lt;/h1&gt;
+# Mount things needed by this script
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
 
-&lt;p&gt;mount -t proc proc /proc
-mount -t sysfs sysfs /sys&lt;/p&gt;
+# Create all the symlinks to /bin/busybox
+busybox --install -s
 
-&lt;h1 id=&#34;create-all-the-symlinks-to-bin-busybox:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Create all the symlinks to /bin/busybox&lt;/h1&gt;
-
-&lt;p&gt;busybox &amp;ndash;install -s&lt;/p&gt;
-
-&lt;h1 id=&#34;create-device-nodes:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Create device nodes&lt;/h1&gt;
-
-&lt;p&gt;mknod /dev/null c 1 3
+# Create device nodes
+mknod /dev/null c 1 3
 mknod /dev/tty c 5 0
-mdev -s&lt;/p&gt;
+mdev -s
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;create a file &lt;code&gt;build_initrd.sh&lt;/code&gt; which will be run everytime there is an update
 to initrd. This may be useful if you add your program to initrd and want to
 run the kernel with the new program. This goes in the root of your kernel source&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
-
-&lt;p&gt;cd initramfs
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+cd initramfs
 find . | cpio -H newc -o &amp;gt; ../initramfs.cpio
 cd ..
-cat initramfs.cpio | gzip &amp;gt; initramfs.igz&lt;/p&gt;
+cat initramfs.cpio | gzip &amp;gt; initramfs.igz
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;running-the-kernel-with-kvm:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Running the kernel with KVM&lt;/h2&gt;
 
 &lt;p&gt;Finally we are ready with our kernel and initrd. Create the file &lt;code&gt;run_kernel.sh&lt;/code&gt;
 which will run the kenrnel in your terminal.&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
-
-&lt;p&gt;kvm -kernel arch/x86_64/boot/bzImage \
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+kvm -kernel arch/x86_64/boot/bzImage \
     -initrd initramfs.gz \
     -chardev stdio,id=stdio,mux=on \
     -device virtio-serial-pci \
     -device virtconsole,chardev=stdio \
     -mon chardev=stdio \
     -display none \
-    -append &amp;lsquo;console=hvc0&amp;rsquo;\
-    -s&lt;/p&gt;
+    -append &#39;console=hvc0&#39;\
+    -s
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;h2 id=&#34;debugging-using-remote-gdb:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Debugging using remote &lt;code&gt;gdb&lt;/code&gt;&lt;/h2&gt;
 
@@ -149,13 +139,12 @@ which will run the kenrnel in your terminal.&lt;/p&gt;
 current terminal. It also starts a gdb server for debugging which is listening
 on port &lt;code&gt;tcp:1234&lt;/code&gt;. You can use a remote &lt;code&gt;gdb&lt;/code&gt; to  debug.&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
-
-&lt;p&gt;$ gdb vmlinux
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+ $ gdb vmlinux
  (gdb) set architecture  i386:x86-64
- (gdb) target remote :1234&lt;/p&gt;
+ (gdb) target remote :1234
 
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;That&amp;rsquo;s it. Once the kernel is up and running, you can attach the debugger and
 debug. If you want to add any modules, throw them in the initramfs directory,
@@ -198,11 +187,10 @@ mataches and I also have a context of how my match is being used.&lt;/p&gt;
 
 &lt;p&gt;To enable this, add the following line to your &lt;code&gt;.vimrc&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;{% highlight bash %}&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;
+map &amp;lt;F5&amp;gt; /&amp;lt;C-r&amp;gt;&amp;lt;C-w&amp;gt; &amp;lt;CR&amp;gt; :vim /&amp;lt;C-r&amp;gt;&amp;lt;C-w&amp;gt;/g % \| copen &amp;lt;CR&amp;gt;
 
-&lt;p&gt;map &lt;F5&gt; /&lt;C-r&gt;&lt;C-w&gt; &lt;CR&gt; :vim /&lt;C-r&gt;&lt;C-w&gt;/g % | copen &lt;CR&gt;&lt;/p&gt;
-
-&lt;p&gt;{% endhighlight %}&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Go over a word and press &lt;code&gt;F5&lt;/code&gt; to open the quickfix window with the matches.
 You can switch between the quickfix buffer and the main buffer by using

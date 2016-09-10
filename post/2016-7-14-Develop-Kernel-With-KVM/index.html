@@ -82,6 +82,12 @@
 
       
         
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.6.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
 
 
 
@@ -110,6 +116,7 @@
 
 
 
+
 <div class="container">
   <div class="row">
     <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
@@ -126,22 +133,20 @@ everywhere.</p>
 
 <p>From kenrel.org or from <code>apt-get</code> both work.</p>
 
-<p>{% highlight bash %}</p>
+<pre><code class="language-bash">
+$ apt-get source linux-image-$(uname  -r)
 
-<p>$ apt-get source linux-image-$(uname  -r)</p>
-
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <h2 id="building-the-kernel:a816a52a42a0108c3eb9925ff78fa214">Building the kernel</h2>
 
-<p>{% highlight bash %}</p>
-
-<p>$ tar -xvf linux_3.13.0.orig.tar.gz
+<pre><code class="language-bash">
+ $ tar -xvf linux_3.13.0.orig.tar.gz 
  $ cd linux-3.13.0/
  $ make bzImage
- $ make_modules</p>
+ $ make_modules
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>This should give you a kernel image in <code>./arch/x86_64/boot/bzImage</code>. Now we need to create
 an initrd which we will boot into. For this I use busybox. Make sure you have the statically
@@ -152,96 +157,88 @@ linked version of the <code>busybox</code> binary and place it in the root of th
 <p>Save the following script in the root of the kernel source with the filename <code>create_initrd.sh</code>.
 This will build the scafollding of our initrd</p>
 
-<p>{% highlight bash %}</p>
+<pre><code class="language-bash">
+mkdir -p  initramfs/bin
+mkdir -p  initramfs/etc
 
-<p>mkdir -p  initramfs/bin
-mkdir -p  initramfs/etc</p>
+touch  initramfs/init
+touch  initramfs/etc/fstab
 
-<p>touch  initramfs/init
-touch  initramfs/etc/fstab</p>
-
-<p>cp busybox initramfs/bin
+cp busybox initramfs/bin
 cd initramfs/bin
-ln -s busybox sh</p>
+ln -s busybox sh
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>The resultant directory structure will be:</p>
 
-<p>{% highlight bash %}</p>
-
-<p>initramfs
+<pre><code class="language-bash">
+initramfs
 ├── bin
 │   ├── busybox
 │   └── sh -&gt; busybox
 ├── etc
 │   └── fstab
-├── init</p>
+├── init
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>Edit the <code>fstab</code> file and add the following lines</p>
 
-<p>{% highlight bash %}</p>
+<pre><code class="language-bash">
+proc /proc proc rw,noexec,nosuid,nodev 0 0
+sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0
 
-<p>proc /proc proc rw,noexec,nosuid,nodev 0 0
-sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0</p>
-
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>Edit the <code>init</code> file and add the following lines</p>
 
-<p>{% highlight bash %}
-#!/bin/sh</p>
+<pre><code class="language-bash">
+#!/bin/sh
 
-<h1 id="mount-things-needed-by-this-script:a816a52a42a0108c3eb9925ff78fa214">Mount things needed by this script</h1>
+# Mount things needed by this script
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
 
-<p>mount -t proc proc /proc
-mount -t sysfs sysfs /sys</p>
+# Create all the symlinks to /bin/busybox
+busybox --install -s
 
-<h1 id="create-all-the-symlinks-to-bin-busybox:a816a52a42a0108c3eb9925ff78fa214">Create all the symlinks to /bin/busybox</h1>
-
-<p>busybox &ndash;install -s</p>
-
-<h1 id="create-device-nodes:a816a52a42a0108c3eb9925ff78fa214">Create device nodes</h1>
-
-<p>mknod /dev/null c 1 3
+# Create device nodes
+mknod /dev/null c 1 3
 mknod /dev/tty c 5 0
-mdev -s</p>
+mdev -s
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>create a file <code>build_initrd.sh</code> which will be run everytime there is an update
 to initrd. This may be useful if you add your program to initrd and want to
 run the kernel with the new program. This goes in the root of your kernel source</p>
 
-<p>{% highlight bash %}</p>
-
-<p>cd initramfs
+<pre><code class="language-bash">
+cd initramfs
 find . | cpio -H newc -o &gt; ../initramfs.cpio
 cd ..
-cat initramfs.cpio | gzip &gt; initramfs.igz</p>
+cat initramfs.cpio | gzip &gt; initramfs.igz
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <h2 id="running-the-kernel-with-kvm:a816a52a42a0108c3eb9925ff78fa214">Running the kernel with KVM</h2>
 
 <p>Finally we are ready with our kernel and initrd. Create the file <code>run_kernel.sh</code>
 which will run the kenrnel in your terminal.</p>
 
-<p>{% highlight bash %}</p>
-
-<p>kvm -kernel arch/x86_64/boot/bzImage \
+<pre><code class="language-bash">
+kvm -kernel arch/x86_64/boot/bzImage \
     -initrd initramfs.gz \
     -chardev stdio,id=stdio,mux=on \
     -device virtio-serial-pci \
     -device virtconsole,chardev=stdio \
     -mon chardev=stdio \
     -display none \
-    -append &lsquo;console=hvc0&rsquo;\
-    -s</p>
+    -append 'console=hvc0'\
+    -s
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <h2 id="debugging-using-remote-gdb:a816a52a42a0108c3eb9925ff78fa214">Debugging using remote <code>gdb</code></h2>
 
@@ -249,13 +246,12 @@ which will run the kenrnel in your terminal.</p>
 current terminal. It also starts a gdb server for debugging which is listening
 on port <code>tcp:1234</code>. You can use a remote <code>gdb</code> to  debug.</p>
 
-<p>{% highlight bash %}</p>
-
-<p>$ gdb vmlinux
+<pre><code class="language-bash">
+ $ gdb vmlinux
  (gdb) set architecture  i386:x86-64
- (gdb) target remote :1234</p>
+ (gdb) target remote :1234
 
-<p>{% endhighlight %}</p>
+</code></pre>
 
 <p>That&rsquo;s it. Once the kernel is up and running, you can attach the debugger and
 debug. If you want to add any modules, throw them in the initramfs directory,
