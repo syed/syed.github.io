@@ -12,7 +12,7 @@
   
   
 
-  <meta name="generator" content="Hugo 0.16" />
+  <meta name="generator" content="Hugo 0.14" />
 
   <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
 
@@ -122,7 +122,7 @@ requires a bunch of google searches and skimming a bunch of tutorials. I am writ
 post to consolidate all of that so that the next time I pick this up, I don&rsquo;t have to search
 everywhere.</p>
 
-<h2 id="getting-the-source">Getting the source</h2>
+<h2 id="getting-the-source:a816a52a42a0108c3eb9925ff78fa214">Getting the source</h2>
 
 <p>From kenrel.org or from <code>apt-get</code> both work.</p>
 
@@ -132,7 +132,7 @@ everywhere.</p>
 
 <p>{% endhighlight %}</p>
 
-<h2 id="building-the-kernel">Building the kernel</h2>
+<h2 id="building-the-kernel:a816a52a42a0108c3eb9925ff78fa214">Building the kernel</h2>
 
 <p>{% highlight bash %}</p>
 
@@ -147,7 +147,7 @@ everywhere.</p>
 an initrd which we will boot into. For this I use busybox. Make sure you have the statically
 linked version of the <code>busybox</code> binary and place it in the root of the kernel source.</p>
 
-<h2 id="building-the-initrd">Building the initrd</h2>
+<h2 id="building-the-initrd:a816a52a42a0108c3eb9925ff78fa214">Building the initrd</h2>
 
 <p>Save the following script in the root of the kernel source with the filename <code>create_initrd.sh</code>.
 This will build the scafollding of our initrd</p>
@@ -194,16 +194,16 @@ sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0</p>
 <p>{% highlight bash %}
 #!/bin/sh</p>
 
-<h1 id="mount-things-needed-by-this-script">Mount things needed by this script</h1>
+<h1 id="mount-things-needed-by-this-script:a816a52a42a0108c3eb9925ff78fa214">Mount things needed by this script</h1>
 
 <p>mount -t proc proc /proc
 mount -t sysfs sysfs /sys</p>
 
-<h1 id="create-all-the-symlinks-to-bin-busybox">Create all the symlinks to /bin/busybox</h1>
+<h1 id="create-all-the-symlinks-to-bin-busybox:a816a52a42a0108c3eb9925ff78fa214">Create all the symlinks to /bin/busybox</h1>
 
 <p>busybox &ndash;install -s</p>
 
-<h1 id="create-device-nodes">Create device nodes</h1>
+<h1 id="create-device-nodes:a816a52a42a0108c3eb9925ff78fa214">Create device nodes</h1>
 
 <p>mknod /dev/null c 1 3
 mknod /dev/tty c 5 0
@@ -224,26 +224,26 @@ cat initramfs.cpio | gzip &gt; initramfs.igz</p>
 
 <p>{% endhighlight %}</p>
 
-<h2 id="running-the-kernel-with-kvm">Running the kernel with KVM</h2>
+<h2 id="running-the-kernel-with-kvm:a816a52a42a0108c3eb9925ff78fa214">Running the kernel with KVM</h2>
 
 <p>Finally we are ready with our kernel and initrd. Create the file <code>run_kernel.sh</code>
 which will run the kenrnel in your terminal.</p>
 
 <p>{% highlight bash %}</p>
 
-<p>kvm -kernel arch/x86_64/boot/bzImage <br />
-    -initrd initramfs.gz <br />
-    -chardev stdio,id=stdio,mux=on <br />
-    -device virtio-serial-pci <br />
-    -device virtconsole,chardev=stdio <br />
-    -mon chardev=stdio <br />
-    -display none <br />
-    -append &lsquo;console=hvc0&rsquo;<br />
+<p>kvm -kernel arch/x86_64/boot/bzImage \
+    -initrd initramfs.gz \
+    -chardev stdio,id=stdio,mux=on \
+    -device virtio-serial-pci \
+    -device virtconsole,chardev=stdio \
+    -mon chardev=stdio \
+    -display none \
+    -append &lsquo;console=hvc0&rsquo;\
     -s</p>
 
 <p>{% endhighlight %}</p>
 
-<h2 id="debugging-using-remote-gdb">Debugging using remote <code>gdb</code></h2>
+<h2 id="debugging-using-remote-gdb:a816a52a42a0108c3eb9925ff78fa214">Debugging using remote <code>gdb</code></h2>
 
 <p>The above command uses KVM to run the kernel and displays the output in the
 current terminal. It also starts a gdb server for debugging which is listening
@@ -262,7 +262,7 @@ debug. If you want to add any modules, throw them in the initramfs directory,
 update the <code>init</code> script to load them when the kernel boots up, rebuild the
 initramfs and you are set.</p>
 
-<h3 id="references">References</h3>
+<h3 id="references:a816a52a42a0108c3eb9925ff78fa214">References</h3>
 
 <p>[1] <a href="http://jootamam.net/howto-initramfs-image.htm">http://jootamam.net/howto-initramfs-image.htm</a> <br/>
 [2] <a href="https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/">https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/</a></p>
@@ -288,77 +288,7 @@ initramfs and you are set.</p>
 
     </div>
 
-    <footer>
-  <div class="container beautiful-jekyll-footer">
-    <div class="row">
-      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-        <ul class="list-inline text-center footer-links">
-          
-          
-          <li>
-            <a href="https://github.com/syed" title="GitHub">
-              <span class="fa-stack fa-lg">
-                <i class="fa fa-circle fa-stack-2x"></i>
-                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-              </span>
-            </a>
-          </li>
-          
-		      
-		      
-		      
-          <li>
-            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
-              <span class="fa-stack fa-lg">
-                <i class="fa fa-circle fa-stack-2x"></i>
-                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
-              </span>
-            </a>
-          </li>
-          
-	    	  
-          
-          
-
-    		  <li>
-      			<a href="http://syed.github.io/index.xml" title="RSS">
-      			  <span class="fa-stack fa-lg">
-        				<i class="fa fa-circle fa-stack-2x"></i>
-        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-      			  </span>
-      			</a>
-    		  </li>		
-
-        </ul>
-        <p class="copyright text-muted">
-    		  Syed Mushtaq Ahmed
-    		  &nbsp;&bull;&nbsp;
-    		  2016
-    		  
-    		  
-    		  &nbsp;&bull;&nbsp;
-    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
-    		  
-  	    </p>
-  	        
-    		<p class="theme-by text-muted">
-    		  Theme by
-    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
-    		</p>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
-<script src="http://syed.github.io/js/bootstrap.min.js"></script>
-<script src="http://syed.github.io/js/main.js"></script>
-<script type="text/javascript"
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
-
+    
 
   </body>
 </html>

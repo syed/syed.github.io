@@ -12,7 +12,7 @@
   
   
 
-  <meta name="generator" content="Hugo 0.16" />
+  <meta name="generator" content="Hugo 0.14" />
 
   <link rel="alternate" href="http://syed.github.io/index.xml" type="application/rss+xml" title="A Cloudy Affair">
 
@@ -146,7 +146,8 @@ mov ax, [080h]
 <p>The above instruction copies the value present at the logical address <code>0x80</code> to
 the <code>ax</code> register.</p>
 
-<p><img src="https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1" alt="Segment addressing" title="Segment addressing in real mode" /></p>
+<p><img src="https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1" alt="Segment addressing" title="Segment addressing in real mode" />
+</p>
 
 <p>The figure above shoes how the final physical address is calculated. If no
 register is given, the <code>DS</code> register is chosen as the segment register which
@@ -157,7 +158,7 @@ the physical address will be</p>
 
 <p>$$ 0\mathtt{X}100*4 + 0\mathtt{X}80 = 0\mathtt{X}480 $$</p>
 
-<h2 id="high-memory-area">High Memory Area</h2>
+<h2 id="high-memory-area:e5d2a51b2bf315c46b3c913ff6317a12">High Memory Area</h2>
 
 <p>Now there is a corner case if you set the segement selector to 0xFFFF you can
 start accessing memory from 16 bytes below the <code>1M</code> limit and go beyond <code>1M</code>
@@ -189,77 +190,7 @@ the <a href="http://en.wikipedia.org/wiki/A20_line">A20</a> line.</p>
 
     </div>
 
-    <footer>
-  <div class="container beautiful-jekyll-footer">
-    <div class="row">
-      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
-        <ul class="list-inline text-center footer-links">
-          
-          
-          <li>
-            <a href="https://github.com/syed" title="GitHub">
-              <span class="fa-stack fa-lg">
-                <i class="fa fa-circle fa-stack-2x"></i>
-                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-              </span>
-            </a>
-          </li>
-          
-		      
-		      
-		      
-          <li>
-            <a href="https://linkedin.com/in/syedmushtaq" title="LinkedIn">
-              <span class="fa-stack fa-lg">
-                <i class="fa fa-circle fa-stack-2x"></i>
-                <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
-              </span>
-            </a>
-          </li>
-          
-	    	  
-          
-          
-
-    		  <li>
-      			<a href="http://syed.github.io/index.xml" title="RSS">
-      			  <span class="fa-stack fa-lg">
-        				<i class="fa fa-circle fa-stack-2x"></i>
-        				<i class="fa fa-rss fa-stack-1x fa-inverse"></i>
-      			  </span>
-      			</a>
-    		  </li>		
-
-        </ul>
-        <p class="copyright text-muted">
-    		  Syed Mushtaq Ahmed
-    		  &nbsp;&bull;&nbsp;
-    		  2016
-    		  
-    		  
-    		  &nbsp;&bull;&nbsp;
-    		  <a href="http://syed.github.io/">A Cloudy Affair</a>
-    		  
-  	    </p>
-  	        
-    		<p class="theme-by text-muted">
-    		  Theme by
-    		  <a href="http://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
-    		</p>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<script src="http://syed.github.io/js/jquery-1.11.2.min.js"></script>
-<script src="http://syed.github.io/js/bootstrap.min.js"></script>
-<script src="http://syed.github.io/js/main.js"></script>
-<script type="text/javascript"
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
-
-
-
+    
 
   </body>
 </html>

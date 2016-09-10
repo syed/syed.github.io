@@ -22,7 +22,7 @@ requires a bunch of google searches and skimming a bunch of tutorials. I am writ
 post to consolidate all of that so that the next time I pick this up, I don&amp;rsquo;t have to search
 everywhere.&lt;/p&gt;
 
-&lt;h2 id=&#34;getting-the-source&#34;&gt;Getting the source&lt;/h2&gt;
+&lt;h2 id=&#34;getting-the-source:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Getting the source&lt;/h2&gt;
 
 &lt;p&gt;From kenrel.org or from &lt;code&gt;apt-get&lt;/code&gt; both work.&lt;/p&gt;
 
@@ -32,7 +32,7 @@ everywhere.&lt;/p&gt;
 
 &lt;p&gt;{% endhighlight %}&lt;/p&gt;
 
-&lt;h2 id=&#34;building-the-kernel&#34;&gt;Building the kernel&lt;/h2&gt;
+&lt;h2 id=&#34;building-the-kernel:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Building the kernel&lt;/h2&gt;
 
 &lt;p&gt;{% highlight bash %}&lt;/p&gt;
 
@@ -47,7 +47,7 @@ everywhere.&lt;/p&gt;
 an initrd which we will boot into. For this I use busybox. Make sure you have the statically
 linked version of the &lt;code&gt;busybox&lt;/code&gt; binary and place it in the root of the kernel source.&lt;/p&gt;
 
-&lt;h2 id=&#34;building-the-initrd&#34;&gt;Building the initrd&lt;/h2&gt;
+&lt;h2 id=&#34;building-the-initrd:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Building the initrd&lt;/h2&gt;
 
 &lt;p&gt;Save the following script in the root of the kernel source with the filename &lt;code&gt;create_initrd.sh&lt;/code&gt;.
 This will build the scafollding of our initrd&lt;/p&gt;
@@ -94,16 +94,16 @@ sysfs /sys sysfs rw,noexec,nosuid,nodev 0 0&lt;/p&gt;
 &lt;p&gt;{% highlight bash %}
 #!/bin/sh&lt;/p&gt;
 
-&lt;h1 id=&#34;mount-things-needed-by-this-script&#34;&gt;Mount things needed by this script&lt;/h1&gt;
+&lt;h1 id=&#34;mount-things-needed-by-this-script:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Mount things needed by this script&lt;/h1&gt;
 
 &lt;p&gt;mount -t proc proc /proc
 mount -t sysfs sysfs /sys&lt;/p&gt;
 
-&lt;h1 id=&#34;create-all-the-symlinks-to-bin-busybox&#34;&gt;Create all the symlinks to /bin/busybox&lt;/h1&gt;
+&lt;h1 id=&#34;create-all-the-symlinks-to-bin-busybox:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Create all the symlinks to /bin/busybox&lt;/h1&gt;
 
 &lt;p&gt;busybox &amp;ndash;install -s&lt;/p&gt;
 
-&lt;h1 id=&#34;create-device-nodes&#34;&gt;Create device nodes&lt;/h1&gt;
+&lt;h1 id=&#34;create-device-nodes:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Create device nodes&lt;/h1&gt;
 
 &lt;p&gt;mknod /dev/null c 1 3
 mknod /dev/tty c 5 0
@@ -124,26 +124,26 @@ cat initramfs.cpio | gzip &amp;gt; initramfs.igz&lt;/p&gt;
 
 &lt;p&gt;{% endhighlight %}&lt;/p&gt;
 
-&lt;h2 id=&#34;running-the-kernel-with-kvm&#34;&gt;Running the kernel with KVM&lt;/h2&gt;
+&lt;h2 id=&#34;running-the-kernel-with-kvm:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Running the kernel with KVM&lt;/h2&gt;
 
 &lt;p&gt;Finally we are ready with our kernel and initrd. Create the file &lt;code&gt;run_kernel.sh&lt;/code&gt;
 which will run the kenrnel in your terminal.&lt;/p&gt;
 
 &lt;p&gt;{% highlight bash %}&lt;/p&gt;
 
-&lt;p&gt;kvm -kernel arch/x86_64/boot/bzImage &lt;br /&gt;
-    -initrd initramfs.gz &lt;br /&gt;
-    -chardev stdio,id=stdio,mux=on &lt;br /&gt;
-    -device virtio-serial-pci &lt;br /&gt;
-    -device virtconsole,chardev=stdio &lt;br /&gt;
-    -mon chardev=stdio &lt;br /&gt;
-    -display none &lt;br /&gt;
-    -append &amp;lsquo;console=hvc0&amp;rsquo;&lt;br /&gt;
+&lt;p&gt;kvm -kernel arch/x86_64/boot/bzImage \
+    -initrd initramfs.gz \
+    -chardev stdio,id=stdio,mux=on \
+    -device virtio-serial-pci \
+    -device virtconsole,chardev=stdio \
+    -mon chardev=stdio \
+    -display none \
+    -append &amp;lsquo;console=hvc0&amp;rsquo;\
     -s&lt;/p&gt;
 
 &lt;p&gt;{% endhighlight %}&lt;/p&gt;
 
-&lt;h2 id=&#34;debugging-using-remote-gdb&#34;&gt;Debugging using remote &lt;code&gt;gdb&lt;/code&gt;&lt;/h2&gt;
+&lt;h2 id=&#34;debugging-using-remote-gdb:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;Debugging using remote &lt;code&gt;gdb&lt;/code&gt;&lt;/h2&gt;
 
 &lt;p&gt;The above command uses KVM to run the kernel and displays the output in the
 current terminal. It also starts a gdb server for debugging which is listening
@@ -162,7 +162,7 @@ debug. If you want to add any modules, throw them in the initramfs directory,
 update the &lt;code&gt;init&lt;/code&gt; script to load them when the kernel boots up, rebuild the
 initramfs and you are set.&lt;/p&gt;
 
-&lt;h3 id=&#34;references&#34;&gt;References&lt;/h3&gt;
+&lt;h3 id=&#34;references:a816a52a42a0108c3eb9925ff78fa214&#34;&gt;References&lt;/h3&gt;
 
 &lt;p&gt;[1] &lt;a href=&#34;http://jootamam.net/howto-initramfs-image.htm&#34;&gt;http://jootamam.net/howto-initramfs-image.htm&lt;/a&gt; &lt;br/&gt;
 [2] &lt;a href=&#34;https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/&#34;&gt;https://blog.nelhage.com/2013/12/lightweight-linux-kernel-development-with-kvm/&lt;/a&gt;&lt;/p&gt;
@@ -184,7 +184,8 @@ browse my matches.&lt;/p&gt;
 &lt;p&gt;Here is what I have come up with.I think this works well for me as I can now easily switch between different
 mataches and I also have a context of how my match is being used.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/b879oj9m2khcep8/vim-qfix-search.png?raw=1&#34; alt=&#34;Vim qfix search&#34; title=&#34;Vim qfix search&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/b879oj9m2khcep8/vim-qfix-search.png?raw=1&#34; alt=&#34;Vim qfix search&#34; title=&#34;Vim qfix search&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;To enable this, add the following line to your &lt;code&gt;.vimrc&lt;/code&gt;&lt;/p&gt;
 
@@ -325,7 +326,8 @@ mov ax, [080h]
 &lt;p&gt;The above instruction copies the value present at the logical address &lt;code&gt;0x80&lt;/code&gt; to
 the &lt;code&gt;ax&lt;/code&gt; register.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1&#34; alt=&#34;Segment addressing&#34; title=&#34;Segment addressing in real mode&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://www.dropbox.com/s/nbz3os9fbawkr39/real_mode_addressing.png?raw=1&#34; alt=&#34;Segment addressing&#34; title=&#34;Segment addressing in real mode&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;The figure above shoes how the final physical address is calculated. If no
 register is given, the &lt;code&gt;DS&lt;/code&gt; register is chosen as the segment register which
@@ -336,7 +338,7 @@ the physical address will be&lt;/p&gt;
 
 &lt;p&gt;$$ 0\mathtt{X}100*4 + 0\mathtt{X}80 = 0\mathtt{X}480 $$&lt;/p&gt;
 
-&lt;h2 id=&#34;high-memory-area&#34;&gt;High Memory Area&lt;/h2&gt;
+&lt;h2 id=&#34;high-memory-area:e5d2a51b2bf315c46b3c913ff6317a12&#34;&gt;High Memory Area&lt;/h2&gt;
 
 &lt;p&gt;Now there is a corner case if you set the segement selector to 0xFFFF you can
 start accessing memory from 16 bytes below the &lt;code&gt;1M&lt;/code&gt; limit and go beyond &lt;code&gt;1M&lt;/code&gt;
